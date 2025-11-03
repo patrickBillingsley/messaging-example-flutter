@@ -1,4 +1,5 @@
 import 'package:messaging_example/api/messages_api.dart';
+import 'package:messaging_example/api/websocket_api/websocket_api.dart';
 import 'package:messaging_example/models/chat.dart';
 import 'package:messaging_example/models/message.dart';
 import 'package:rxdart/rxdart.dart';
@@ -13,7 +14,9 @@ class MessagesBloc {
 
   MessagesBloc._([
     MessagesApi? api,
-  ]) : _api = api ?? MessagesApi();
+  ]) : _api = api ?? MessagesApi() {
+    WebsocketApi().subscribeTo(channel: 'Chat');
+  }
 
   final PublishSubject<List<Message>> _subject = PublishSubject();
   Stream<List<Message>> get stream => _subject.stream;
