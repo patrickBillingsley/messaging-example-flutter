@@ -1,7 +1,8 @@
 import 'package:messaging_example/api/messages_api.dart';
-import 'package:messaging_example/api/websocket_api/websocket_api.dart';
+import 'package:messaging_example/api/websocket_api.dart';
 import 'package:messaging_example/models/chat.dart';
 import 'package:messaging_example/models/message.dart';
+import 'package:messaging_example/models/websocket_subscription.dart';
 import 'package:rxdart/rxdart.dart';
 
 class MessagesBloc {
@@ -15,7 +16,15 @@ class MessagesBloc {
   MessagesBloc._([
     MessagesApi? api,
   ]) : _api = api ?? MessagesApi() {
-    WebsocketApi().subscribeTo(channel: 'Chat');
+    WebsocketSubscription(
+      channel: 'ChatChannel',
+      onSubscribed: () {
+        print('Successfully subscribed to ChatChannel.');
+      },
+      onData: (data) {
+        print('[Chat]: $data');
+      },
+    ).subscribe();
   }
 
   final PublishSubject<List<Message>> _subject = PublishSubject();
