@@ -1,11 +1,11 @@
 import 'package:messaging_example/api/messages_api.dart';
-import 'package:messaging_example/api/websocket_api.dart';
+import 'package:messaging_example/mixin/logger.dart';
 import 'package:messaging_example/models/chat.dart';
 import 'package:messaging_example/models/message.dart';
 import 'package:messaging_example/models/websocket_subscription.dart';
 import 'package:rxdart/rxdart.dart';
 
-class MessagesBloc {
+class MessagesBloc with Logger {
   static MessagesBloc? _instance;
   final MessagesApi _api;
 
@@ -16,15 +16,7 @@ class MessagesBloc {
   MessagesBloc._([
     MessagesApi? api,
   ]) : _api = api ?? MessagesApi() {
-    WebsocketSubscription(
-      channel: 'ChatChannel',
-      onSubscribed: () {
-        print('Successfully subscribed to ChatChannel.');
-      },
-      onData: (data) {
-        print('[Chat]: $data');
-      },
-    ).subscribe();
+    _subscribeToChatChannel();
   }
 
   final PublishSubject<List<Message>> _subject = PublishSubject();
@@ -33,5 +25,9 @@ class MessagesBloc {
   Future<void> fetchMessagesFor(Chat chat) async {
     final messages = await _api.fetchMessagesFor(chat);
     _subject.add(messages);
+  }
+
+  WebsocketSubscription _subscribeToChatChannel() {
+    return WebsocketSubscription(channel: 'ChatChannel');
   }
 }
