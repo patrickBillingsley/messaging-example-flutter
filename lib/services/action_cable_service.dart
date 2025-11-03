@@ -10,7 +10,7 @@ enum MessageType {
   ping,
 }
 
-class ActionCableService {
+class ActionCableService with Logger {
   static const String websocketUrl = 'ws://10.0.2.2:3000/cable'; // Works locally with Android emulator.
   final WebSocketChannel _cable = WebSocketChannel.connect(Uri.parse(websocketUrl));
 
@@ -22,9 +22,9 @@ class ActionCableService {
   Future<void> connect() async {
     if (_connected) return;
 
-    print('Cable connecting...');
+    log.info('Cable connecting...');
     await _cable.ready;
-    print('Cable connected!');
+    log.info('Cable ready!');
 
     _cable.stream.listen((data) {
       _cable.sink.add(data);
@@ -44,8 +44,6 @@ class ActionCableService {
             _onDataCallbacks[channel]?.call(message);
           }
       }
-
-      print(data);
     });
   }
 

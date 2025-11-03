@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:messaging_example/screens/chat_screen.dart';
+import 'package:messaging_example/services/logging_service.dart';
 
 void main() {
+  LoggingService().initialize();
+
   runApp(const MainApp());
 }
 
