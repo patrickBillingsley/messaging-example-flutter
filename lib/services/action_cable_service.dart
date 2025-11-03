@@ -2,12 +2,23 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
+import 'package:messaging_example/mixin/logger.dart';
 import 'package:messaging_example/models/websocket_subscription.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-enum MessageType {
-  welcome,
-  ping,
+enum WebsocketMessageType {
+  welcome('welcome'),
+  ping('ping'),
+  confirmSubscription('confirm_subscription');
+
+  final String key;
+
+  const WebsocketMessageType(this.key);
+
+  static WebsocketMessageType? fromKey(String key) {
+    return values.firstWhereOrNull((value) => value.key == key);
+  }
 }
 
 class ActionCableService with Logger {
@@ -30,11 +41,12 @@ class ActionCableService with Logger {
       _cable.sink.add(data);
 
       data = jsonDecode(data);
-      switch (data['type']) {
-        case 'welcome':
-        case 'ping':
+      final messageType = WebsocketMessageType.fromKey(data['type']);
+      switch (messageType) {
+        case WebsocketMessageType.welcome:
+        case WebsocketMessageType.ping:
           _connected = true;
-        case 'confirm_subscription':
+        case WebsocketMessageType.confirmSubscription:
           final channel = jsonDecode(data['identifier'])['channel'];
           _onSubscribedCallbacks[channel]?.call();
         default:
