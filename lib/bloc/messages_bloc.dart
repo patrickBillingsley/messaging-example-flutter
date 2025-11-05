@@ -19,16 +19,31 @@ class MessagesBloc with Logger {
     _subscribeToChatChannel();
   }
 
-  final PublishSubject<List<Message>> _subject = PublishSubject();
+  final BehaviorSubject<List<Message>> _subject = BehaviorSubject();
   Stream<List<Message>> get stream => _subject.stream;
+  List<Message> get messages => _subject.value;
 
   Future<void> fetchMessagesFor(Chat chat) async {
     final messages = await _api.fetchMessagesFor(chat);
     _subject.add(messages);
   }
 
-  Future<Message> send(Message message) {
-    return _api.sendMessage(message);
+  Future<Message> send(Message message) async {
+    try {
+      // Add pending message.
+      _subject.add(messages..add(message));
+
+      final persistedMessage = await _api.sendMessage(message);
+      final updatedMessages = messages
+        ..remove(message)
+        ..add(persistedMessage);
+      _subject.add(updatedMessages);
+
+      return persistedMessage;
+    } catch (err, st) {
+      log.warning('${err.runtimeType} occurred while sending message', err, st);
+      rethrow;
+    }
   }
 
   WebsocketSubscription _subscribeToChatChannel() {

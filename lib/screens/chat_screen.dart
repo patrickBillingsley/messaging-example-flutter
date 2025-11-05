@@ -46,9 +46,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendMessage(String body) async {
     final message = Message(chatId: widget.chat.id, body: body);
-    setState(() {
-      _messages = messages..add(message);
-    });
     await message.send();
   }
 
@@ -66,6 +63,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   ...messages.map((message) {
                     return Card(
+                      color: message.isPending ? Colors.cyanAccent.shade100 : null,
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Text(message.body),

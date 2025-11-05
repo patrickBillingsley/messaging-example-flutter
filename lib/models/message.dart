@@ -22,5 +22,7 @@ class Message {
     );
   }
 
+  bool get isPending => id == null;
+
   Future<Message> send() => MessagesBloc().send(this);
 }
