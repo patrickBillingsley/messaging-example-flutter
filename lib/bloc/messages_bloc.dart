@@ -27,8 +27,8 @@ class MessagesBloc with Logger {
     _subject.add(messages);
   }
 
-  Future<Message> sendMessage(Chat chat, String body) {
-    return _api.sendMessage(chat, body);
+  Future<Message> send(Message message) {
+    return _api.sendMessage(message);
   }
 
   WebsocketSubscription _subscribeToChatChannel() {

@@ -24,13 +24,13 @@ class MessagesApi with Logger {
     }
   }
 
-  Future<Message> sendMessage(Chat chat, String body) async {
+  Future<Message> sendMessage(Message message) async {
     try {
-      final url = Uri.parse('$baseApiUrl/chats/${chat.id}/messages');
+      final url = Uri.parse('$baseApiUrl/chats/${message.chatId}/messages');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'sender_id': '1', 'body': body}),
+        body: jsonEncode({'sender_id': '1', 'body': message.body}),
       );
       final data = Map<String, Object?>.from(jsonDecode(response.body));
 

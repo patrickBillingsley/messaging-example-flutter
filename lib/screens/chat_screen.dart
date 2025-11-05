@@ -20,8 +20,10 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   late final StreamSubscription<List<Message>> _messagesSubscription;
 
+  final TextEditingController _textController = TextEditingController();
+
   List<Message>? _messages;
-  List<Message> get messages => _messages ?? [];
+  List<Message> get messages => List.from(_messages ?? []);
 
   @override
   void initState() {
@@ -42,8 +44,12 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  Future<Message> _sendMessage(String body) {
-    return MessagesBloc().sendMessage(widget.chat, body);
+  Future<void> _sendMessage(String body) async {
+    final message = Message(chatId: widget.chat.id, body: body);
+    setState(() {
+      _messages = messages..add(message);
+    });
+    await message.send();
   }
 
   @override
@@ -71,6 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
 
             TextField(
+              controller: _textController,
               onSubmitted: _sendMessage,
             ),
           ],
