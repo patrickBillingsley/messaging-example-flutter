@@ -1,11 +1,11 @@
 class Message {
   final String? id;
-  final String senderId;
+  final String? senderId;
   final String body;
 
   const Message({
     this.id,
-    required this.senderId,
+    this.senderId,
     required this.body,
   });
 

@@ -3,19 +3,21 @@ import 'dart:ui';
 import 'package:messaging_example/api/websocket_api.dart';
 import 'package:messaging_example/mixin/logger.dart';
 
+typedef Json = Map<String, dynamic>;
+
 class WebsocketSubscription with Logger {
   /// Must be Pascalcase and end with 'Channel'.
   ///
   /// Example: 'ChatChannel';
   final String channel;
   final VoidCallback? _onSubscribed;
-  final Function(dynamic)? _onData;
+  final Function(Json)? _onData;
   final VoidCallback? _onDisconnected;
 
   WebsocketSubscription({
     required this.channel,
     VoidCallback? onSubscribed,
-    Function(dynamic)? onData,
+    Function(Json)? onData,
     VoidCallback? onDisconnected,
   }) : _onSubscribed = onSubscribed,
        _onData = onData,
@@ -31,7 +33,7 @@ class WebsocketSubscription with Logger {
     _onSubscribed?.call();
   }
 
-  void onData(data) {
+  void onData(Json data) {
     log.info('Received data via websocket:');
     log.info(data);
     _onData?.call(data);

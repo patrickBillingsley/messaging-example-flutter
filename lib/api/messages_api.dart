@@ -11,13 +11,33 @@ class MessagesApi with Logger {
   Future<List<Message>> fetchMessagesFor(Chat chat) async {
     try {
       final url = Uri.parse('$baseApiUrl/chats/${chat.id}/messages');
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
       final data = List<Map<String, Object?>>.from(jsonDecode(response.body));
 
       return data.map(Message.fromJson).toList();
     } catch (err, st) {
       log.severe('${err.runtimeType} occurred while fetching messages', err, st);
-      return Future.error(err, st);
+      rethrow;
+    }
+  }
+
+  Future<Message> sendMessage(Chat chat, String body) async {
+    try {
+      final url = Uri.parse('$baseApiUrl/chats/${chat.id}/messages');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'sender_id': '1', 'body': body}),
+      );
+      final data = Map<String, Object?>.from(jsonDecode(response.body));
+
+      return Message.fromJson(data);
+    } catch (err, st) {
+      log.severe('${err.runtimeType} occurred while sending message', err, st);
+      rethrow;
     }
   }
 }

@@ -27,7 +27,17 @@ class MessagesBloc with Logger {
     _subject.add(messages);
   }
 
+  Future<Message> sendMessage(Chat chat, String body) {
+    return _api.sendMessage(chat, body);
+  }
+
   WebsocketSubscription _subscribeToChatChannel() {
-    return WebsocketSubscription(channel: 'ChatChannel');
+    return WebsocketSubscription(
+      channel: 'ChatChannel',
+      onData: (Map<String, dynamic> data) {
+        final message = Message.fromJson(data);
+        return message;
+      },
+    );
   }
 }

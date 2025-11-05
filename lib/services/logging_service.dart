@@ -12,7 +12,6 @@ class LoggingService {
   LoggingService._();
 
   void initialize() {
-    print('Initializing...');
     logging.Logger.root.level = logging.Level.ALL;
     logging.Logger.root.onRecord.listen((record) {
       print('${record.level.name} [${record.loggerName}] ${record.message}');

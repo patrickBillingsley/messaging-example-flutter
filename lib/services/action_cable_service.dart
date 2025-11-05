@@ -16,7 +16,7 @@ enum WebsocketMessageType {
 
   const WebsocketMessageType(this.key);
 
-  static WebsocketMessageType? fromKey(String key) {
+  static WebsocketMessageType? fromKey(String? key) {
     return values.firstWhereOrNull((value) => value.key == key);
   }
 }
@@ -37,26 +37,7 @@ class ActionCableService with Logger {
     await _cable.ready;
     log.info('Cable ready!');
 
-    _cable.stream.listen((data) {
-      _cable.sink.add(data);
-
-      data = jsonDecode(data);
-      final messageType = WebsocketMessageType.fromKey(data['type']);
-      switch (messageType) {
-        case WebsocketMessageType.welcome:
-        case WebsocketMessageType.ping:
-          _connected = true;
-        case WebsocketMessageType.confirmSubscription:
-          final channel = jsonDecode(data['identifier'])['channel'];
-          _onSubscribedCallbacks[channel]?.call();
-        default:
-          final channel = jsonDecode(data['identifier'])['channel'];
-          final message = data['message'];
-          if (channel != null && message != null) {
-            _onDataCallbacks[channel]?.call(message);
-          }
-      }
-    });
+    _cable.stream.listen(_onData);
   }
 
   Future<void> subscribeTo<T extends Object?>(WebsocketSubscription subscription) async {
@@ -71,5 +52,24 @@ class ActionCableService with Logger {
         'command': 'subscribe',
       }),
     );
+  }
+
+  void _onData(dynamic data) {
+    data = jsonDecode(data);
+    final messageType = WebsocketMessageType.fromKey(data['type']);
+    switch (messageType) {
+      case WebsocketMessageType.welcome:
+      case WebsocketMessageType.ping:
+        _connected = true;
+      case WebsocketMessageType.confirmSubscription:
+        final channel = jsonDecode(data['identifier'])['channel'];
+        _onSubscribedCallbacks[channel]?.call();
+      default:
+        final channel = jsonDecode(data['identifier'])['channel'];
+        final message = data['message'];
+        if (channel != null && message != null) {
+          _onDataCallbacks[channel]?.call(message);
+        }
+    }
   }
 }
