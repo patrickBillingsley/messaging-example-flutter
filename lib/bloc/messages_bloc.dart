@@ -19,7 +19,7 @@ class MessagesBloc with Logger {
     _subscribeToChatChannel();
   }
 
-  final BehaviorSubject<List<Message>> _subject = BehaviorSubject();
+  final BehaviorSubject<List<Message>> _subject = BehaviorSubject.seeded([]);
   Stream<List<Message>> get stream => _subject.stream;
   List<Message> get messages => _subject.value;
 
@@ -28,15 +28,12 @@ class MessagesBloc with Logger {
     _subject.add(messages);
   }
 
-  Future<Message> send(Message message) async {
+  Future<Message> send(Message pendingMessage) async {
     try {
-      // Add pending message.
-      _subject.add(messages..add(message));
+      _subject.add(messages..add(pendingMessage));
 
-      final persistedMessage = await _api.sendMessage(message);
-      final updatedMessages = messages
-        ..remove(message)
-        ..add(persistedMessage);
+      final persistedMessage = await _api.sendMessage(pendingMessage);
+      final updatedMessages = messages.replace(pendingMessage, next: persistedMessage);
       _subject.add(updatedMessages);
 
       return persistedMessage;
@@ -49,10 +46,20 @@ class MessagesBloc with Logger {
   WebsocketSubscription _subscribeToChatChannel() {
     return WebsocketSubscription(
       channel: 'ChatChannel',
-      onData: (Map<String, dynamic> data) {
+      onData: (Json data) {
         final message = Message.fromJson(data);
         return message;
       },
     );
+  }
+}
+
+extension MessageListExtension on List<Message> {
+  List<Message> replace(Message message, {required Message next}) {
+    final index = indexOf(message);
+    if (index > -1) {
+      replaceRange(index, index, [next]);
+    }
+    return this;
   }
 }

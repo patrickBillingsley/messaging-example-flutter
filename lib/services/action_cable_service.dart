@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
@@ -22,7 +23,7 @@ enum WebsocketMessageType {
 }
 
 class ActionCableService with Logger {
-  static const String websocketUrl = 'ws://10.0.2.2:3000/cable'; // Works locally with Android emulator.
+  static String get websocketUrl => 'ws://${Platform.isAndroid ? '10.0.2.2' : 'localhost'}:3000/cable';
   final WebSocketChannel _cable = WebSocketChannel.connect(Uri.parse(websocketUrl));
 
   final Map<String, VoidCallback?> _onSubscribedCallbacks = {};

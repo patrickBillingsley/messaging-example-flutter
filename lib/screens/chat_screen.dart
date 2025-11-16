@@ -45,7 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage(String body) async {
-    final message = Message(chatId: widget.chat.id, body: body);
+    final message = Message(chatId: widget.chat.id, senderId: '1', body: body);
     await message.send();
   }
 
