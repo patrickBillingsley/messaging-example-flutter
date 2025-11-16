@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:messaging_example/mixin/logger.dart';
@@ -6,7 +7,7 @@ import 'package:messaging_example/models/chat.dart';
 import 'package:messaging_example/models/message.dart';
 
 class MessagesApi with Logger {
-  static const String baseApiUrl = 'http://10.0.2.2:3000/api/v1';
+  static String get baseApiUrl => 'http://${Platform.isAndroid ? '10.0.2.2' : 'localhost'}:3000/api/v1';
 
   Future<List<Message>> fetchMessagesFor(Chat chat) async {
     try {

@@ -48,7 +48,7 @@ class MessagesBloc with Logger {
       channel: 'ChatChannel',
       onData: (Json data) {
         final message = Message.fromJson(data);
-        return message;
+        _subject.add([...messages, message]);
       },
     );
   }
