@@ -53,24 +53,24 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        minimum: const EdgeInsets.symmetric(horizontal: 20, vertical: 36),
+        minimum: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ...messages.map((message) {
-                    return Card(
-                      color: message.isPending ? Colors.cyanAccent.shade100 : null,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text(message.body),
-                      ),
-                    );
-                  }),
-                ],
+              child: ListView.builder(
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final message = messages[index];
+
+                  return Card(
+                    color: message.isPending ? Colors.cyanAccent.shade100 : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(message.body),
+                    ),
+                  );
+                },
               ),
             ),
 
