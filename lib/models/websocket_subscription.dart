@@ -2,8 +2,7 @@ import 'dart:ui';
 
 import 'package:messaging_example/api/websocket_api.dart';
 import 'package:messaging_example/mixin/logger.dart';
-
-typedef Json = Map<String, dynamic>;
+import 'package:messaging_example/types.dart';
 
 class WebsocketSubscription with Logger {
   /// Must be Pascalcase and end with 'Channel'.

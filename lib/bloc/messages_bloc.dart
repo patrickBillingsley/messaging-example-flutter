@@ -3,6 +3,7 @@ import 'package:messaging_example/mixin/logger.dart';
 import 'package:messaging_example/models/chat.dart';
 import 'package:messaging_example/models/message.dart';
 import 'package:messaging_example/models/websocket_subscription.dart';
+import 'package:messaging_example/types.dart';
 import 'package:rxdart/rxdart.dart';
 
 class MessagesBloc with Logger {
