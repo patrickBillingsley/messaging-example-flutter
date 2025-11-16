@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:messaging_example/models/chat.dart';
-import 'package:messaging_example/screens/chat_screen.dart';
+import 'package:messaging_example/screens/login_screen.dart';
 import 'package:messaging_example/services/logging_service.dart';
 
 void main() {
@@ -15,7 +14,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: ChatScreen(Chat(id: '1')),
+      home: LoginScreen(),
     );
   }
 }
