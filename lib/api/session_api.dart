@@ -4,7 +4,7 @@ import 'package:messaging_example/models/user.dart';
 class SessionApi extends BaseApi {
   Future<User> login(String email, String password) {
     return post<User>(
-      '$baseApiUrl/sign_in',
+      '$baseApiUrl/auth/sign_in',
       mapper: User.fromJson,
       body: {
         'email': email,

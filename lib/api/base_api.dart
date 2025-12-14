@@ -24,7 +24,7 @@ class BaseApi with Logger {
       throw ApiException(errors: json['errors']);
     }
 
-    return mapper(json);
+    return mapper(json['data']);
   }
 
   Future<List<T>> fetchList<T extends Object>(
@@ -37,7 +37,7 @@ class BaseApi with Logger {
       throw ApiException(errors: json['errors']);
     }
 
-    return List<T>.from(json.map<T>(mapper));
+    return List<T>.from(json['data'].map<T>(mapper));
   }
 
   Future<T> post<T extends Object>(
@@ -55,7 +55,7 @@ class BaseApi with Logger {
       throw ApiException(errors: json['errors']);
     }
 
-    return mapper(json);
+    return mapper(json['data']);
   }
 }
 

@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:messaging_example/api/base_api.dart';
 import 'package:messaging_example/bloc/session_bloc.dart';
 import 'package:messaging_example/models/user.dart';
+import 'package:messaging_example/screens/home_screen.dart';
 import 'package:messaging_example/widgets/animated_list_item.dart';
 import 'package:messaging_example/widgets/keyboard_dismisser.dart';
 
@@ -17,25 +19,27 @@ class SessionScreen extends StatefulWidget {
 class _SessionScreenState extends State<SessionScreen> {
   late final StreamSubscription<User?> _currentUserSubscription;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _passwordConfirmationController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
+  final _form = GlobalKey<FormState>();
+  final Map<String, GlobalKey<FormFieldState<String>>> _fields = {
+    'email': GlobalKey(),
+    'username': GlobalKey(),
+    'password': GlobalKey(),
+    'password_confirmation': GlobalKey(),
+  };
 
-  String? _emailError;
-  String? _usernameError;
+  Map<String, String?> _errors = {};
 
-  bool login = true;
+  bool _showSignupFields = false;
 
-  String get email => _emailController.text.trim();
-  String get password => _passwordController.text.trim();
-  String get passwordConfirmation => _passwordConfirmationController.text.trim();
-  String get username => _usernameController.text.trim();
+  String valueFor(String field) => _fields[field]?.currentState?.value ?? '';
 
   @override
   void initState() {
     super.initState();
-    _currentUserSubscription = SessionBloc().currentUserStream.listen(_onCurrentUserChanged)..onError(_handleError);
+    _currentUserSubscription = SessionBloc().currentUserStream.listen(
+      _onCurrentUserChanged,
+      onError: _handleError,
+    );
   }
 
   @override
@@ -45,44 +49,119 @@ class _SessionScreenState extends State<SessionScreen> {
   }
 
   void _onCurrentUserChanged(User? user) {
-    if (user != null) {}
+    if (user != null) {
+      HomeScreen().replaceStack();
+    }
   }
 
   void _handleError(Object err) {
     if (err is ApiException) {
       setState(() {
-        _emailError = err.errors['email'];
-        _usernameError = err.errors['username'];
+        _errors['email'] = err.errors['email'];
+        _errors['username'] = err.errors['username'];
+        _errors['password'] = err.errors['password'];
+        _errors['password_confirmation'] = err.errors['password_confirmation'];
       });
     }
   }
 
   Future<void> _login() async {
-    if (login) {
+    if (_form.currentState!.validate()) {
       await SessionBloc().login(
-        email: email,
-        password: password,
+        email: valueFor('email'),
+        password: valueFor('password'),
       );
-    } else {
+    }
+  }
+
+  void _showLogin() {
+    if (!_showSignupFields) return;
+
+    setState(() {
+      _showSignupFields = false;
+      _form.currentState?.reset();
+      _errors = {};
+    });
+  }
+
+  Future<void> _signup() async {
+    if (_form.currentState!.validate()) {
+      await SessionBloc().signup(
+        email: valueFor('email'),
+        username: valueFor('username'),
+        password: valueFor('password'),
+        passwordConfirmation: valueFor('passwordConfirmation'),
+      );
+    }
+  }
+
+  void _showSignup() {
+    if (_showSignupFields) return;
+
+    setState(() {
+      _showSignupFields = true;
+      _form.currentState?.reset();
+      _errors = {};
+    });
+  }
+
+  void _onChanged(String? value, String fieldKey) {
+    if (_fields[fieldKey]?.currentState?.errorText != null) {
+      _fields[fieldKey]?.currentState?.reset();
+    }
+
+    _clearError(fieldKey);
+  }
+
+  void _clearError(String key) {
+    if (!mounted) return;
+
+    if (_errors[key] != null) {
       setState(() {
-        login = true;
+        _errors[key] = null;
       });
     }
   }
 
-  Future<void> _signup() async {
-    if (login) {
-      setState(() {
-        login = false;
-      });
-    } else {
-      await SessionBloc().signup(
-        email: email,
-        username: username,
-        password: password,
-        passwordConfirmation: passwordConfirmation,
-      );
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Must provide an email.';
     }
+
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Must provide a valid email.';
+    }
+
+    return null;
+  }
+
+  String? _validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Must provide a username.';
+    }
+
+    if (value.length < 3) {
+      return 'Username must be at least 3 characters long.';
+    }
+
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Must provide a password';
+    }
+
+    if (_showSignupFields && valueFor('password') != valueFor('passwordConfirmation')) {
+      return 'Passwords must match';
+    }
+
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters long.';
+    }
+
+    return null;
   }
 
   @override
@@ -92,57 +171,107 @@ class _SessionScreenState extends State<SessionScreen> {
         appBar: AppBar(),
         body: SafeArea(
           minimum: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  errorText: _emailError,
-                ),
-              ),
-              AnimatedListItem(
-                child: login
-                    ? null
-                    : TextField(
-                        controller: _usernameController,
+          child: Form(
+            key: _form,
+            child: Column(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextFormField(
+                        key: _fields['email'],
+                        validator: _validateEmail,
+                        onChanged: (value) => _onChanged(value, 'email'),
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(30),
+                          FilteringTextInputFormatter.deny(RegExp(r'\s+')),
+                        ],
                         decoration: InputDecoration(
-                          labelText: 'Username',
-                          errorText: _usernameError,
+                          labelText: 'Email',
+                          errorText: _errors['email'],
                         ),
                       ),
-              ),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-              ),
-              AnimatedListItem(
-                child: login
-                    ? null
-                    : TextField(
-                        controller: _passwordConfirmationController,
-                        decoration: InputDecoration(labelText: 'Confirm Password'),
+                      AnimatedListItem(
+                        visible: _showSignupFields,
+                        child: TextFormField(
+                          key: _fields['username'],
+                          validator: _validateUsername,
+                          onChanged: (value) => _onChanged(value, 'username'),
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(15),
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^[A-Za-z0-9_!@$+]+$'),
+                              replacementString: valueFor('username'),
+                            ),
+                          ],
+                          decoration: InputDecoration(
+                            labelText: 'Username',
+                            errorText: _errors['username'],
+                          ),
+                        ),
                       ),
-              ),
-              const SizedBox(height: 48),
-              FilledButton(
-                onPressed: _login,
-                style: FilledButton.styleFrom(
-                  foregroundColor: login ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.primary,
-                  backgroundColor: login ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                      TextFormField(
+                        key: _fields['password'],
+                        validator: _validatePassword,
+                        onChanged: (value) => _onChanged(value, 'password'),
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        // obscureText: true,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(20),
+                          FilteringTextInputFormatter.deny(RegExp(r'\s+')),
+                        ],
+                        decoration: InputDecoration(labelText: 'Password'),
+                      ),
+                      AnimatedListItem(
+                        visible: _showSignupFields,
+                        child: TextFormField(
+                          key: _fields['password_confirmation'],
+                          validator: _validatePassword,
+                          onChanged: (value) => _onChanged(value, 'password_confirmation'),
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          // obscureText: true,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(20),
+                            FilteringTextInputFormatter.deny(RegExp(r'\s+')),
+                          ],
+                          decoration: InputDecoration(labelText: 'Confirm Password'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Text('Login'),
-              ),
-              FilledButton(
-                onPressed: _signup,
-                style: FilledButton.styleFrom(
-                  foregroundColor: login ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onPrimary,
-                  backgroundColor: login ? Colors.transparent : Theme.of(context).colorScheme.primary,
+                Flexible(
+                  child: Column(
+                    children: [
+                      FilledButton(
+                        onPressed: _showSignupFields ? _showLogin : _login,
+                        style: FilledButton.styleFrom(
+                          foregroundColor: _showSignupFields ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onPrimary,
+                          backgroundColor: _showSignupFields ? Colors.transparent : Theme.of(context).colorScheme.primary,
+                        ),
+                        child: const Text('Login'),
+                      ),
+                      FilledButton(
+                        onPressed: _showSignupFields ? _signup : _showSignup,
+                        style: FilledButton.styleFrom(
+                          foregroundColor: _showSignupFields ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.primary,
+                          backgroundColor: _showSignupFields ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                        ),
+                        child: const Text('Signup'),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Text('Signup'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

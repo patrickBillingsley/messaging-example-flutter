@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class AnimatedListItem extends StatelessWidget {
+  final bool visible;
   final Widget? child;
 
   const AnimatedListItem({
     super.key,
+    this.visible = true,
     required this.child,
   });
 
@@ -21,7 +23,7 @@ class AnimatedListItem extends StatelessWidget {
           child: child,
         );
       },
-      child: child,
+      child: visible ? child : null,
     );
   }
 }

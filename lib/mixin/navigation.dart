@@ -8,7 +8,17 @@ mixin Navigation<T extends Widget> {
 
   void show() {
     navigator.push(
-      MaterialPageRoute(builder: (_) => this as T),
+      MaterialPageRoute(
+        builder: (_) => this as T,
+      ),
+    );
+  }
+
+  void replaceStack() {
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => this as T,
+      ),
     );
   }
 
