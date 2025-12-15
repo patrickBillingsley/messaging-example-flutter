@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:messaging_example/bloc/messages_bloc.dart';
+import 'package:messaging_example/mixin/navigation.dart';
 import 'package:messaging_example/models/chat.dart';
 import 'package:messaging_example/models/message.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends StatefulWidget with Navigation<ChatScreen> {
   final Chat chat;
 
   const ChatScreen(
@@ -18,7 +19,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late final StreamSubscription<List<Message>> _messagesSubscription;
+  late final StreamSubscription<List<Message>?> _messagesSubscription;
 
   final TextEditingController _textController = TextEditingController();
 
@@ -28,7 +29,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _messagesSubscription = MessagesBloc().stream.listen(_setMessages);
+    _messagesSubscription = MessagesBloc().streamFor(widget.chat).listen(_setMessages);
     MessagesBloc().fetchMessagesFor(widget.chat);
   }
 
@@ -38,7 +39,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void _setMessages(List<Message> messages) {
+  void _setMessages(List<Message>? messages) {
     setState(() {
       _messages = messages;
     });
@@ -52,6 +53,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.chat.name ?? ''),
+      ),
       body: SafeArea(
         minimum: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(

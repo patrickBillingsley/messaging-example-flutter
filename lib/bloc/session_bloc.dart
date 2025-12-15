@@ -1,6 +1,7 @@
-import 'package:messaging_example/api/base_api.dart';
 import 'package:messaging_example/api/session_api.dart';
+import 'package:messaging_example/exceptions/server_exception.dart';
 import 'package:messaging_example/mixin/logger.dart';
+import 'package:messaging_example/models/credentials.dart';
 import 'package:messaging_example/models/user.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -20,11 +21,15 @@ class SessionBloc with Logger {
   Stream<User?> get currentUserStream => _currentUserSubject.stream;
   User? get currentUser => _currentUserSubject.valueOrNull;
 
+  Credentials? _credentials;
+  Credentials? get credentials => _credentials;
+
   Future<void> login({required String email, required String password}) async {
     try {
-      final user = await _api.login(email, password);
+      final (user, credentials) = await _api.login(email, password);
+      _credentials = credentials;
       _currentUserSubject.add(user);
-    } on ApiException catch (err) {
+    } on ServerException catch (err) {
       log.warning('${err.runtimeType} occurred while logging in.', err);
       _currentUserSubject.addError(err);
     }
@@ -39,7 +44,7 @@ class SessionBloc with Logger {
     try {
       final user = await _api.signup(email, username, password, passwordConfirmation);
       _currentUserSubject.add(user);
-    } on ApiException catch (err) {
+    } on ServerException catch (err) {
       log.warning('${err.runtimeType} occurred while signing up.', err);
       _currentUserSubject.addError(err);
     }

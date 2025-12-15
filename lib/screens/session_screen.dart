@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:messaging_example/api/base_api.dart';
 import 'package:messaging_example/bloc/session_bloc.dart';
+import 'package:messaging_example/exceptions/server_exception.dart';
 import 'package:messaging_example/models/user.dart';
 import 'package:messaging_example/screens/home_screen.dart';
 import 'package:messaging_example/widgets/animated_list_item.dart';
@@ -50,17 +50,17 @@ class _SessionScreenState extends State<SessionScreen> {
 
   void _onCurrentUserChanged(User? user) {
     if (user != null) {
-      HomeScreen().replaceStack();
+      HomeScreen().show();
     }
   }
 
   void _handleError(Object err) {
-    if (err is ApiException) {
+    if (err is ServerException) {
       setState(() {
-        _errors['email'] = err.errors['email'];
-        _errors['username'] = err.errors['username'];
-        _errors['password'] = err.errors['password'];
-        _errors['password_confirmation'] = err.errors['password_confirmation'];
+        _errors['email'] = err.userReadableErrors['email'];
+        _errors['username'] = err.userReadableErrors['username'];
+        _errors['password'] = err.userReadableErrors['password'];
+        _errors['password_confirmation'] = err.userReadableErrors['password_confirmation'];
       });
     }
   }

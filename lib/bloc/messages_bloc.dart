@@ -20,22 +20,25 @@ class MessagesBloc with Logger {
     _subscribeToChatChannel();
   }
 
-  final BehaviorSubject<List<Message>> _subject = BehaviorSubject.seeded([]);
-  Stream<List<Message>> get stream => _subject.stream;
-  List<Message> get messages => _subject.value;
+  final BehaviorSubject<Map<String, List<Message>>> _subject = BehaviorSubject.seeded({});
+  Stream<List<Message>?> streamFor(Chat chat) => _subject.stream.map((chats) => chats[chat.id]);
+  List<Message> messagesFor(Chat chat) => List.from(_subject.value[chat.id] ?? []);
+  Map<String, List<Message>> get messageMap => Map.from(_subject.value);
 
   Future<void> fetchMessagesFor(Chat chat) async {
     final messages = await _api.fetchMessagesFor(chat);
-    _subject.add(messages);
+    _subject.add(messageMap..[chat.id] = messages);
   }
 
-  Future<Message> send(Message pendingMessage) async {
+  Future<Message> send(Message message) async {
     try {
-      _subject.add(messages..add(pendingMessage));
+      final pendingMessages = messageMap..[message.chatId] ??= [];
+      pendingMessages[message.chatId]!.add(message);
+      _subject.add(pendingMessages);
 
-      final persistedMessage = await _api.sendMessage(pendingMessage);
-      final updatedMessages = messages.replace(pendingMessage, next: persistedMessage);
-      _subject.add(updatedMessages);
+      final persistedMessage = await _api.sendMessage(message);
+      final persistedMessages = messageMap..[message.chatId]!.replace(message, next: persistedMessage);
+      _subject.add(persistedMessages);
 
       return persistedMessage;
     } catch (err, st) {
@@ -49,7 +52,9 @@ class MessagesBloc with Logger {
       channel: 'ChatChannel',
       onData: (Json data) {
         final message = Message.fromJson(data);
-        _subject.add([...messages, message]);
+        final updatedMessages = messageMap..[message.chatId] ??= [];
+        updatedMessages[message.chatId]!.add(message);
+        _subject.add(updatedMessages);
       },
     );
   }
